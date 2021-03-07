@@ -32,7 +32,7 @@ def get_model(seq_length, input_dim, output_dim, units):
 
 def train():
     # zero padding
-    input_vec = sequence.pad_sequences(np.load('dataset/input_vector.npy'))
+    input_vec = sequence.pad_sequences(np.load('dataset/input_vector.npy', allow_pickle=True))
     target_vec = np.load('dataset/target_vector.npy')
 
     input_dim = input_vec.shape[2]
