@@ -2,6 +2,8 @@ import glob
 import csv
 import json
 
+from music_dictionary import chord_dictionary, scale_dictionary, key_signature_calculator, root_dictionary, unused_note
+
 
 class Measure:
     def __init__(self, measure, chord, note):
@@ -12,65 +14,17 @@ class Measure:
 
 def convert_chord_type(chord):
     """Change all the chord to the major or minor."""
-    return {'maj': 'maj',
-            'major': 'maj',
-            'major-sixth': 'maj',
-            'major-seventh': 'maj',
-            'maj7': 'maj',
-            'major-ninth': 'maj',
-            'maj69': 'maj',
-            'maj9': 'maj',
-            'major-minor': 'maj',
-            'minor': 'min',
-            'min': 'min',
-            'minor-sixth': 'min',
-            'minor-seventh': 'min',
-            'min7': 'min',
-            'min9': 'min',
-            'minor-ninth': 'min',
-            'minor-11th': 'min',
-            'minor-13th': 'min',
-            'minor-major': 'min',
-            'minMaj7': 'min',
-            '6': 'maj',
-            '7': 'maj',
-            '9': 'maj',
-            'dominant': 'maj',
-            'dominant-seventh': 'maj',
-            'dominant-ninth': 'maj',
-            'dominant-11th': 'maj',
-            'dominant-13th': 'maj',
-            'augmented': 'maj',
-            'aug': 'maj',
-            'augmented-seventh': 'maj',
-            'augmented-ninth': 'maj',
-            'dim': 'min',
-            'diminished': 'min',
-            'diminished-seventh': 'min',
-            'half-diminished': 'min',
-            'm7b5': 'min',
-            'dim7': 'min',
-            ' dim7': 'min',
-            'suspended-second': 'maj',
-            'suspended-fourth': 'maj',
-            'sus47': 'maj',
-            'power': 'maj'}.get(chord, None)
+    return chord_dictionary.get(chord, None)
 
 
 def scale_to_integer(scale):
     """Convert the scale to integer."""
-    return {'B#': 0, 'C0': 0, 'C2': 0,
-            'Db': 1, 'C#': 1,
-            'D0': 2, 'D-2': 2,
-            'Eb': 3, 'D#': 3,
-            'E0': 4, 'Fb': 4,
-            'F0': 5, 'E#': 5, 'F2': 5,
-            'Gb': 6, 'F#': 6,
-            'G0': 7,
-            'Ab': 8, 'G#': 8,
-            'A0': 9, 'A2': 9,
-            'Bb': 10, 'A#': 10,
-            'Cb': 11, 'B0': 11, 'B-2': 11}.get(scale, None)
+    return scale_dictionary.get(scale, None)
+
+
+def get_transpose_interval(key):
+    """Get the interval to transpose from key signature."""
+    return key_signature_calculator.get(key, None)
 
 
 def transpose(root, key):
@@ -86,33 +40,13 @@ def transpose(root, key):
     return transposed_index
 
 
-def get_transpose_interval(key):
-    """Get the interval to transpose from key signature."""
-    return {'-6': 6,
-            '-5': -1,
-            '-4': 4,
-            '-3': -3,
-            '-2': 2,
-            '-1': -5,
-            '0': 0,
-            '1': 5,
-            '2': -2,
-            '3': 3,
-            '4': -4,
-            '5': 1,
-            '6': -6,
-            '7': -1}.get(key, None)
-
-
 def preprocess(files):
-    for csv_path in glob.glob(files):
-        csv_ins = open(csv_path, 'r', encoding='utf-8')
-        next(csv_ins)  # skip first line
-        reader = csv.reader(csv_ins)
+    for file in glob.glob(files):
+        with open(file, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+        next(reader)  # skip first line
 
         song = []
-
-        # get all rows from csv file
         for line in reader:
             measure = line[1]
             key_fifths = line[2]
@@ -120,8 +54,8 @@ def preprocess(files):
             chord_type = line[5]
             note_root = line[6]
 
-            # ignore rest note or None
-            if chord_type in skip_data or note_root in skip_data:
+            # ignore unused note
+            if chord_type in unused_note or note_root in unused_note:
                 continue
 
             # convert all the chord to major or minor
@@ -131,17 +65,14 @@ def preprocess(files):
             transposed_chord = transpose(chord_root, key_fifths)
             transposed_note = transpose(note_root, key_fifths)
 
-            chord = root_dict[transposed_chord] + ':' + result_chord_type
-            note = root_dict[transposed_note]
+            chord = root_dictionary[transposed_chord] + ':' + result_chord_type
+            note = root_dictionary[transposed_note]
 
             song.append(Measure(measure, chord, note))
         yield song
 
 
 if __name__ == '__main__':
-    skip_data = ['rest', '[]', '', 'pedal']
-    root_dict = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-
     with open('config.json') as f:
         config = json.load(f)
 
