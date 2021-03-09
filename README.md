@@ -1,3 +1,5 @@
+project renewal is in progress.
+
 # Chord Generator with Attention LSTM
 Keras implementation of "[Chord Generation from Symbolic Melody Using BLSTM Networks](https://arxiv.org/abs/1712.01011)"
 
