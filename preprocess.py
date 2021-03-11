@@ -40,10 +40,10 @@ def transpose(root, key):
     return transposed_index
 
 
-def preprocess(files):
-    for file in glob.glob(files):
-        with open(file, 'r', encoding='utf-8') as f:
-            reader = csv.reader(f)
+def preprocess(paths):
+    for path in glob.glob(paths):
+        csv_file = open(path, 'r', encoding='utf-8')
+        reader = csv.reader(csv_file)
         next(reader)  # skip first line
 
         song = []
@@ -69,6 +69,7 @@ def preprocess(files):
             note = root_dictionary[transposed_note]
 
             song.append(Measure(measure, chord, note))
+        csv_file.close()
         yield song
 
 
