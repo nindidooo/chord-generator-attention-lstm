@@ -5,13 +5,6 @@ import json
 from music_dictionary import chord_dictionary, scale_dictionary, key_signature_calculator, root_dictionary, unused_note
 
 
-class Measure:
-    def __init__(self, measure, chord, note):
-        self.measure = measure
-        self.chord = chord
-        self.note = note
-
-
 def convert_chord_type(chord):
     """Change all the chord to the major or minor."""
     return chord_dictionary.get(chord, None)
@@ -32,12 +25,11 @@ def transpose(root, key):
     root_integer = scale_to_integer(root)  # result : 0 ~ 11
     transpose_interval = get_transpose_interval(key)
 
-    # transpose
     transposed_index = root_integer + transpose_interval
     if transposed_index >= 12:
         transposed_index = transposed_index - 12
 
-    return transposed_index
+    return root_dictionary[transposed_index]
 
 
 def preprocess(paths):
@@ -46,13 +38,10 @@ def preprocess(paths):
         reader = csv.reader(csv_file)
         next(reader)  # skip first line
 
-        song = []
+        song = dict()
         for line in reader:
-            measure = line[1]
-            key_fifths = line[2]
-            chord_root = line[4]
-            chord_type = line[5]
-            note_root = line[6]
+            measure, key_fifths = line[1], line[2]
+            chord_root, chord_type, note_root = line[4], line[5], line[6]
 
             # ignore unused note
             if chord_type in unused_note or note_root in unused_note:
@@ -62,13 +51,13 @@ def preprocess(paths):
             result_chord_type = convert_chord_type(chord_type)
 
             # transpose
-            transposed_chord = transpose(chord_root, key_fifths)
-            transposed_note = transpose(note_root, key_fifths)
+            result_chord = transpose(chord_root, key_fifths) + ':' + result_chord_type
+            result_note = transpose(note_root, key_fifths)
 
-            chord = root_dictionary[transposed_chord] + ':' + result_chord_type
-            note = root_dictionary[transposed_note]
-
-            song.append(Measure(measure, chord, note))
+            if measure not in song:
+                song[measure] = {'chord': result_chord, 'note_sequence': [result_note]}
+            else:
+                song.get(measure).get('note_sequence').append(result_note)
         csv_file.close()
         yield song
 
