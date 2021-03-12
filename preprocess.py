@@ -1,8 +1,9 @@
 import glob
 import csv
 import json
+import torch
 
-from music_dictionary import chord_dictionary, scale_dictionary, key_signature_calculator, root_dictionary, unused_note
+from music_dictionary import chord_dictionary, scale_dictionary, key_signature_calculator, root_list, chord_list, unused_note
 
 
 def convert_chord_type(chord):
@@ -29,7 +30,7 @@ def transpose(root, key):
     if transposed_index >= 12:
         transposed_index = transposed_index - 12
 
-    return root_dictionary[transposed_index]
+    return root_list[transposed_index]
 
 
 def preprocess(paths):
@@ -62,9 +63,27 @@ def preprocess(paths):
         yield song
 
 
+def one_hot_encoding(data, data_list):
+    """Return the one hot vector."""
+    vectors = [0] * len(data_list)
+    index = data_list.index(data)
+    vectors[index] = 1
+    return vectors
+
+
+def make_dataset(dataset):
+    for song in dataset:
+        for measure in song:
+            chord, note_sequence = song[measure]['chord'], song[measure]['note_sequence']
+            x = torch.tensor([one_hot_encoding(note, root_list) for note in note_sequence])
+            y = torch.tensor(one_hot_encoding(chord, chord_list))
+
+
 if __name__ == '__main__':
     with open('config.json') as f:
         config = json.load(f)
 
     train = preprocess(config['train_path'])
     test = preprocess(config['test_path'])
+    make_dataset(train)
+    make_dataset(test)

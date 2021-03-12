@@ -70,6 +70,19 @@ key_signature_calculator = {'-6': 6,
                             '6': -6,
                             '7': -1}
 
-root_dictionary = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+root_list = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+
+chord_list = ['C:maj', 'C:min',
+              'C#:maj', 'C#:min',
+              'D:maj', 'D:min',
+              'D#:maj', 'D#:min',
+              'E:maj', 'E:min',
+              'F:maj', 'F:min',
+              'F#:maj', 'F#:min',
+              'G:maj', 'G:min',
+              'G#:maj', 'G#:min',
+              'A:maj', 'A:min',
+              'A#:maj', 'A#:min',
+              'B:maj', 'B:min']
 
 unused_note = ['rest', '[]', '', 'pedal']
