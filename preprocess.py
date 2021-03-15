@@ -1,7 +1,8 @@
 import glob
 import csv
 import json
-import torch
+import os
+import numpy as np
 
 from music_dictionary import chord_dictionary, scale_dictionary, key_signature_calculator, root_list, chord_list, unused_note
 
@@ -34,6 +35,7 @@ def transpose(root, key):
 
 
 def preprocess(paths):
+    vectorized_songs = []
     for path in glob.glob(paths):
         csv_file = open(path, 'r', encoding='utf-8')
         reader = csv.reader(csv_file)
@@ -60,7 +62,15 @@ def preprocess(paths):
             else:
                 song.get(measure).get('note_sequence').append(result_note)
         csv_file.close()
-        yield song
+
+        # vectorize the song
+        inputs, targets = [], []
+        for measure in song:
+            chord, note_sequence = song[measure]['chord'], song[measure]['note_sequence']
+            inputs.append([one_hot_encoding(note, root_list) for note in note_sequence])
+            targets.append(one_hot_encoding(chord, chord_list))
+            vectorized_songs.append([inputs, targets])
+    return vectorized_songs
 
 
 def one_hot_encoding(data, data_list):
@@ -71,19 +81,16 @@ def one_hot_encoding(data, data_list):
     return vectors
 
 
-def make_dataset(dataset):
-    for song in dataset:
-        for measure in song:
-            chord, note_sequence = song[measure]['chord'], song[measure]['note_sequence']
-            x = torch.tensor([one_hot_encoding(note, root_list) for note in note_sequence])
-            y = torch.tensor(one_hot_encoding(chord, chord_list))
-
-
 if __name__ == '__main__':
     with open('config.json') as f:
         config = json.load(f)
 
-    train = preprocess(config['train_path'])
-    test = preprocess(config['test_path'])
-    make_dataset(train)
-    make_dataset(test)
+    train = preprocess(config['raw_train'])
+    test = preprocess(config['raw_test'])
+
+    if not os.path.exists(config['npy_train']) or not os.path.exists(config['npy_test']):
+        np.save(config['npy_train'], train)
+        np.save(config['npy_test'], test)
+        print('save numpy file.')
+    else:
+        print('numpy file already exist.')
