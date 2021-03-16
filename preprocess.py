@@ -69,7 +69,7 @@ def preprocess(paths):
             chord, note_sequence = song[measure]['chord'], song[measure]['note_sequence']
             inputs.append([one_hot_encoding(note, root_list) for note in note_sequence])
             targets.append(one_hot_encoding(chord, chord_list))
-            vectorized_songs.append([inputs, targets])
+        vectorized_songs.append([inputs, targets])
     return vectorized_songs
 
 
