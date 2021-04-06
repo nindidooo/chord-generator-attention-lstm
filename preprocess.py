@@ -1,3 +1,4 @@
+import pdb
 import glob
 import csv
 import json
@@ -38,6 +39,8 @@ def preprocess(paths):
     vectorized_songs = []
     for path in glob.glob(paths):
         csv_file = open(path, 'r', encoding='utf-8')
+        print(csv_file)
+        
         reader = csv.reader(csv_file)
         next(reader)  # skip first line
 
@@ -45,6 +48,8 @@ def preprocess(paths):
         for line in reader:
             measure, key_fifths = line[1], line[2]
             chord_root, chord_type, note_root = line[4], line[5], line[6]
+
+            print(line)
 
             # ignore unused note
             if chord_type in unused_note or note_root in unused_note:
@@ -63,15 +68,26 @@ def preprocess(paths):
                 song.get(measure).get('note_sequence').append(result_note)
         csv_file.close()
 
+        
         # vectorize the song
         inputs, targets = [], []
+
         for measure in song:
             chord, note_sequence = song[measure]['chord'], song[measure]['note_sequence']
+            
+            # get the note sequence here
             inputs.append([one_hot_encoding(note, root_list) for note in note_sequence])
-            targets.append(one_hot_encoding(chord, chord_list))
-        vectorized_songs.append([inputs, targets])
-    return vectorized_songs
+            # note_seq2 = ['F', 'G', 'G#', 'B', 'C', 'C', 'B', 'B', 'G#', 'G', 'E', 'F']
+            # input_array = [one_hot_encoding(note, root_list) for note in note_seq2]
+            print(inputs)
+            # pdb.set_trace()
 
+            # and get the chord that note sequence belonged to here:
+            targets.append(one_hot_encoding(chord, chord_list))
+
+        vectorized_songs.append([inputs, targets])
+
+    return vectorized_songs
 
 def one_hot_encoding(data, data_list):
     """Return the one hot vector."""
@@ -80,13 +96,13 @@ def one_hot_encoding(data, data_list):
     vectors[index] = 1
     return vectors
 
-
 if __name__ == '__main__':
     with open('config.json') as f:
         config = json.load(f)
 
     train = preprocess(config['raw_train'])
     test = preprocess(config['raw_test'])
+    print(test)
 
     if not os.path.exists(config['npy_train']) or not os.path.exists(config['npy_test']):
         np.save(config['npy_train'], train)

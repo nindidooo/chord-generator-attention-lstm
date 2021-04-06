@@ -1,6 +1,6 @@
 from keras_preprocessing import sequence
-from keras.layers import *
-from keras.models import Model
+from tensorflow.keras.layers import *
+from tensorflow.keras.models import Model
 import numpy as np
 import time
 import os
